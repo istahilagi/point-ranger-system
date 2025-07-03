@@ -4,10 +4,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Plus, Users, Star, Upload, Download, Camera } from 'lucide-react';
+import { Plus, Users, Star, Upload, Download, Camera, Edit, Trash2, X } from 'lucide-react';
 import { User, Rombel } from '../../pages/Index';
 import * as XLSX from 'xlsx';
 
@@ -19,6 +20,7 @@ interface SiswaManagementProps {
 
 const SiswaManagement = ({ users, setUsers, rombels }: SiswaManagementProps) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingSiswa, setEditingSiswa] = useState<User | null>(null);
   const [formData, setFormData] = useState({
     nama: '',
     rombel: '',
@@ -33,20 +35,57 @@ const SiswaManagement = ({ users, setUsers, rombels }: SiswaManagementProps) => 
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const newSiswa: User = {
-      id: Date.now().toString(),
-      nama: formData.nama,
-      username: formData.username,
-      password: formData.password,
-      role: 'siswa',
-      rombel: formData.rombel,
-      points: 0,
-      foto: formData.foto
-    };
     
-    setUsers([...users, newSiswa]);
+    if (editingSiswa) {
+      // Update existing siswa
+      const updatedUsers = users.map(user => 
+        user.id === editingSiswa.id 
+          ? { 
+              ...user, 
+              nama: formData.nama, 
+              username: formData.username, 
+              password: formData.password,
+              rombel: formData.rombel,
+              foto: formData.foto
+            }
+          : user
+      );
+      setUsers(updatedUsers);
+      setEditingSiswa(null);
+    } else {
+      // Add new siswa
+      const newSiswa: User = {
+        id: Date.now().toString(),
+        nama: formData.nama,
+        username: formData.username,
+        password: formData.password,
+        role: 'siswa',
+        rombel: formData.rombel,
+        points: 0,
+        foto: formData.foto
+      };
+      setUsers([...users, newSiswa]);
+    }
+    
     setFormData({ nama: '', rombel: '', username: '', password: '', foto: '' });
     setIsDialogOpen(false);
+  };
+
+  const handleEdit = (siswa: User) => {
+    setEditingSiswa(siswa);
+    setFormData({
+      nama: siswa.nama,
+      rombel: siswa.rombel || '',
+      username: siswa.username,
+      password: siswa.password,
+      foto: siswa.foto || ''
+    });
+    setIsDialogOpen(true);
+  };
+
+  const handleDelete = (siswaId: string) => {
+    const updatedUsers = users.filter(user => user.id !== siswaId);
+    setUsers(updatedUsers);
   };
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -58,6 +97,15 @@ const SiswaManagement = ({ users, setUsers, rombels }: SiswaManagementProps) => 
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  const handleRemovePhoto = () => {
+    setFormData({...formData, foto: ''});
+  };
+
+  const resetForm = () => {
+    setFormData({ nama: '', rombel: '', username: '', password: '', foto: '' });
+    setEditingSiswa(null);
   };
 
   const handleImportExcel = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -140,7 +188,10 @@ const SiswaManagement = ({ users, setUsers, rombels }: SiswaManagementProps) => 
             <Download className="h-4 w-4" />
             Export Excel
           </Button>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <Dialog open={isDialogOpen} onOpenChange={(open) => {
+            setIsDialogOpen(open);
+            if (!open) resetForm();
+          }}>
             <DialogTrigger asChild>
               <Button className="flex items-center gap-2">
                 <Plus className="h-4 w-4" />
@@ -149,7 +200,7 @@ const SiswaManagement = ({ users, setUsers, rombels }: SiswaManagementProps) => 
             </DialogTrigger>
             <DialogContent className="max-w-md">
               <DialogHeader>
-                <DialogTitle>Tambah Siswa Baru</DialogTitle>
+                <DialogTitle>{editingSiswa ? 'Edit Siswa' : 'Tambah Siswa Baru'}</DialogTitle>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
@@ -161,7 +212,7 @@ const SiswaManagement = ({ users, setUsers, rombels }: SiswaManagementProps) => 
                         <Camera className="h-6 w-6 text-gray-400" />
                       </AvatarFallback>
                     </Avatar>
-                    <div>
+                    <div className="flex flex-col gap-2">
                       <input
                         type="file"
                         ref={photoInputRef}
@@ -178,6 +229,18 @@ const SiswaManagement = ({ users, setUsers, rombels }: SiswaManagementProps) => 
                         <Upload className="h-4 w-4 mr-2" />
                         Upload Foto
                       </Button>
+                      {formData.foto && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={handleRemovePhoto}
+                          className="text-red-600 hover:text-red-700"
+                        >
+                          <X className="h-4 w-4 mr-2" />
+                          Hapus Foto
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -228,7 +291,7 @@ const SiswaManagement = ({ users, setUsers, rombels }: SiswaManagementProps) => 
                   />
                 </div>
                 <Button type="submit" className="w-full">
-                  Tambah Siswa
+                  {editingSiswa ? 'Update Siswa' : 'Tambah Siswa'}
                 </Button>
               </form>
             </DialogContent>
@@ -250,6 +313,41 @@ const SiswaManagement = ({ users, setUsers, rombels }: SiswaManagementProps) => 
                     {siswa.nama}
                   </CardTitle>
                   <Badge variant="secondary">Siswa</Badge>
+                </div>
+                <div className="flex gap-1">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleEdit(siswa)}
+                    className="h-8 w-8 p-0"
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Hapus Siswa</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Apakah Anda yakin ingin menghapus siswa {siswa.nama}? Aksi ini tidak dapat dibatalkan.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Batal</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => handleDelete(siswa.id)}>
+                          Hapus
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
               </div>
             </CardHeader>
