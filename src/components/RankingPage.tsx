@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -51,7 +50,12 @@ const RankingPage = ({ users, kelas, pointHistories, onBack }: RankingPageProps)
 
     return (
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 overflow-hidden">
-        <div className="animate-marquee whitespace-nowrap text-blue-800">
+        <div 
+          className="whitespace-nowrap text-blue-800"
+          style={{
+            animation: 'marquee 20s linear infinite'
+          }}
+        >
           {historyText || 'Belum ada aktivitas hari ini'}
         </div>
       </div>
@@ -139,6 +143,15 @@ const RankingPage = ({ users, kelas, pointHistories, onBack }: RankingPageProps)
           {/* Marquee for class-specific history */}
           <MarqueeText histories={todayHistories} kelasFilter={selectedKelas} />
         </div>
+        
+        <style>
+          {`
+            @keyframes marquee {
+              0% { transform: translateX(100%); }
+              100% { transform: translateX(-100%); }
+            }
+          `}
+        </style>
       </div>
     );
   }
@@ -224,15 +237,14 @@ const RankingPage = ({ users, kelas, pointHistories, onBack }: RankingPageProps)
         <MarqueeText histories={todayHistories} />
       </div>
 
-      <style jsx>{`
-        @keyframes marquee {
-          0% { transform: translateX(100%); }
-          100% { transform: translateX(-100%); }
-        }
-        .animate-marquee {
-          animation: marquee 20s linear infinite;
-        }
-      `}</style>
+      <style>
+        {`
+          @keyframes marquee {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+          }
+        `}
+      </style>
     </div>
   );
 };
