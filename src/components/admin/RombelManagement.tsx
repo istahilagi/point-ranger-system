@@ -15,20 +15,33 @@ interface RombelManagementProps {
   setUsers: (users: User[]) => void;
   rombels: Rombel[];
   setRombels: (rombels: Rombel[]) => void;
+  selectedKelas?: string;
 }
 
-const RombelManagement = ({ users, setUsers, rombels, setRombels }: RombelManagementProps) => {
+const RombelManagement = ({ users, setUsers, rombels, setRombels, selectedKelas }: RombelManagementProps) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedRombel, setSelectedRombel] = useState<Rombel | null>(null);
   const [formData, setFormData] = useState({
     nama: ''
   });
 
+  // Filter rombels based on selected class if provided
+  const displayRombels = selectedKelas 
+    ? rombels.filter(r => r.nama.startsWith(selectedKelas))
+    : rombels;
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    let rombelName = formData.nama;
+    
+    // If we're in class mode, prefix the rombel name with the class
+    if (selectedKelas && !formData.nama.startsWith(selectedKelas)) {
+      rombelName = `${selectedKelas} - ${formData.nama}`;
+    }
+    
     const newRombel: Rombel = {
       id: Date.now().toString(),
-      nama: formData.nama,
+      nama: rombelName,
       siswa: []
     };
     
@@ -44,7 +57,9 @@ const RombelManagement = ({ users, setUsers, rombels, setRombels }: RombelManage
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold text-gray-900">Manajemen Rombel</h2>
+        <h2 className="text-xl font-semibold text-gray-900">
+          {selectedKelas ? `Manajemen Rombel ${selectedKelas}` : 'Manajemen Rombel'}
+        </h2>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button className="flex items-center gap-2">
@@ -54,7 +69,9 @@ const RombelManagement = ({ users, setUsers, rombels, setRombels }: RombelManage
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Tambah Rombel Baru</DialogTitle>
+              <DialogTitle>
+                Tambah Rombel Baru {selectedKelas && `untuk ${selectedKelas}`}
+              </DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
@@ -63,9 +80,14 @@ const RombelManagement = ({ users, setUsers, rombels, setRombels }: RombelManage
                   id="nama"
                   value={formData.nama}
                   onChange={(e) => setFormData({...formData, nama: e.target.value})}
-                  placeholder="Masukkan nama rombel (misal: X-1)"
+                  placeholder={selectedKelas ? "Contoh: A, B, C" : "Masukkan nama rombel (misal: Kelas 1 - A)"}
                   required
                 />
+                {selectedKelas && (
+                  <p className="text-sm text-gray-500">
+                    Akan dibuat sebagai: {selectedKelas} - {formData.nama}
+                  </p>
+                )}
               </div>
               <Button type="submit" className="w-full">
                 Tambah Rombel
@@ -76,7 +98,7 @@ const RombelManagement = ({ users, setUsers, rombels, setRombels }: RombelManage
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {rombels.map((rombel) => (
+        {displayRombels.map((rombel) => (
           <Card key={rombel.id} className="hover:shadow-md transition-shadow">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
@@ -107,10 +129,15 @@ const RombelManagement = ({ users, setUsers, rombels, setRombels }: RombelManage
         ))}
       </div>
 
-      {rombels.length === 0 && (
+      {displayRombels.length === 0 && (
         <div className="text-center py-12">
           <Building2 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <p className="text-gray-500">Belum ada rombel yang terdaftar</p>
+          <p className="text-gray-500">
+            {selectedKelas 
+              ? `Belum ada rombel yang terdaftar untuk ${selectedKelas}` 
+              : 'Belum ada rombel yang terdaftar'
+            }
+          </p>
         </div>
       )}
 

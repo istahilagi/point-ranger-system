@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -7,8 +7,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Users, Star } from 'lucide-react';
+import { Plus, Users, Star, Upload, Download } from 'lucide-react';
 import { User, Rombel } from '../../pages/Index';
+import * as XLSX from 'xlsx';
 
 interface SiswaManagementProps {
   users: User[];
@@ -24,6 +25,7 @@ const SiswaManagement = ({ users, setUsers, rombels }: SiswaManagementProps) => 
     username: '',
     password: ''
   });
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const siswas = users.filter(u => u.role === 'siswa');
 
@@ -44,74 +46,152 @@ const SiswaManagement = ({ users, setUsers, rombels }: SiswaManagementProps) => 
     setIsDialogOpen(false);
   };
 
+  const handleImportExcel = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const data = new Uint8Array(event.target?.result as ArrayBuffer);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        const jsonData = XLSX.utils.sheet_to_json(worksheet) as any[];
+
+        const newSiswas: User[] = jsonData.map((row, index) => ({
+          id: (Date.now() + index).toString(),
+          nama: row.nama || row.Nama || '',
+          username: row.username || row.Username || '',
+          password: row.password || row.Password || 'default123',
+          role: 'siswa' as const,
+          rombel: row.rombel || row.Rombel || '',
+          points: 0
+        })).filter(siswa => siswa.nama && siswa.username);
+
+        setUsers([...users, ...newSiswas]);
+        console.log(`Successfully imported ${newSiswas.length} students`);
+      } catch (error) {
+        console.error('Error importing Excel file:', error);
+        alert('Error importing Excel file. Please check the format.');
+      }
+    };
+    reader.readAsArrayBuffer(file);
+    
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handleExportExcel = () => {
+    const exportData = siswas.map(siswa => ({
+      Nama: siswa.nama,
+      Username: siswa.username,
+      Rombel: siswa.rombel || '',
+      Points: siswa.points || 0
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Data Siswa');
+    
+    XLSX.writeFile(workbook, `data-siswa-${new Date().toISOString().split('T')[0]}.xlsx`);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold text-gray-900">Manajemen Siswa</h2>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="flex items-center gap-2">
-              <Plus className="h-4 w-4" />
-              Tambahkan Siswa
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Tambah Siswa Baru</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="nama">Nama</Label>
-                <Input
-                  id="nama"
-                  value={formData.nama}
-                  onChange={(e) => setFormData({...formData, nama: e.target.value})}
-                  placeholder="Masukkan nama siswa"
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="rombel">Rombel</Label>
-                <Select value={formData.rombel} onValueChange={(value) => setFormData({...formData, rombel: value})}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Pilih rombel" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {rombels.map((rombel) => (
-                      <SelectItem key={rombel.id} value={rombel.nama}>
-                        {rombel.nama}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="username">Username</Label>
-                <Input
-                  id="username"
-                  value={formData.username}
-                  onChange={(e) => setFormData({...formData, username: e.target.value})}
-                  placeholder="Masukkan username"
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={formData.password}
-                  onChange={(e) => setFormData({...formData, password: e.target.value})}
-                  placeholder="Masukkan password"
-                  required
-                />
-              </div>
-              <Button type="submit" className="w-full">
-                Tambah Siswa
+        <div className="flex gap-2">
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleImportExcel}
+            accept=".xlsx,.xls"
+            className="hidden"
+          />
+          <Button 
+            variant="outline" 
+            onClick={() => fileInputRef.current?.click()}
+            className="flex items-center gap-2"
+          >
+            <Upload className="h-4 w-4" />
+            Import Excel
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={handleExportExcel}
+            className="flex items-center gap-2"
+          >
+            <Download className="h-4 w-4" />
+            Export Excel
+          </Button>
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="flex items-center gap-2">
+                <Plus className="h-4 w-4" />
+                Tambahkan Siswa
               </Button>
-            </form>
-          </DialogContent>
-        </Dialog>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Tambah Siswa Baru</DialogTitle>
+              </DialogHeader>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="nama">Nama</Label>
+                  <Input
+                    id="nama"
+                    value={formData.nama}
+                    onChange={(e) => setFormData({...formData, nama: e.target.value})}
+                    placeholder="Masukkan nama siswa"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="rombel">Rombel</Label>
+                  <Select value={formData.rombel} onValueChange={(value) => setFormData({...formData, rombel: value})}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Pilih rombel" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {rombels.map((rombel) => (
+                        <SelectItem key={rombel.id} value={rombel.nama}>
+                          {rombel.nama}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="username">Username</Label>
+                  <Input
+                    id="username"
+                    value={formData.username}
+                    onChange={(e) => setFormData({...formData, username: e.target.value})}
+                    placeholder="Masukkan username"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    value={formData.password}
+                    onChange={(e) => setFormData({...formData, password: e.target.value})}
+                    placeholder="Masukkan password"
+                    required
+                  />
+                </div>
+                <Button type="submit" className="w-full">
+                  Tambah Siswa
+                </Button>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

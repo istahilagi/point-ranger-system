@@ -7,7 +7,7 @@ import { Users, GraduationCap, Building2, LogOut } from 'lucide-react';
 import { User, Rombel } from '../pages/Index';
 import GuruManagement from './admin/GuruManagement';
 import SiswaManagement from './admin/SiswaManagement';
-import RombelManagement from './admin/RombelManagement';
+import KelasManagement from './admin/KelasManagement';
 
 interface AdminDashboardProps {
   currentUser: User;
@@ -23,7 +23,7 @@ const AdminDashboard = ({ currentUser, users, setUsers, rombels, setRombels, onL
   
   const guruCount = users.filter(u => u.role === 'guru').length;
   const siswaCount = users.filter(u => u.role === 'siswa').length;
-  const rombelCount = rombels.length;
+  const kelasCount = 6; // Fixed 6 classes
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
@@ -70,12 +70,12 @@ const AdminDashboard = ({ currentUser, users, setUsers, rombels, setRombels, onL
           
           <Card className="bg-gradient-to-r from-purple-500 to-purple-600 text-white">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Rombel</CardTitle>
+              <CardTitle className="text-sm font-medium">Total Kelas</CardTitle>
               <Building2 className="h-4 w-4" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{rombelCount}</div>
-              <p className="text-xs text-purple-100">Rombel aktif</p>
+              <div className="text-2xl font-bold">{kelasCount}</div>
+              <p className="text-xs text-purple-100">Kelas tersedia</p>
             </CardContent>
           </Card>
         </div>
@@ -87,7 +87,7 @@ const AdminDashboard = ({ currentUser, users, setUsers, rombels, setRombels, onL
               <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="guru">Guru</TabsTrigger>
                 <TabsTrigger value="siswa">Siswa</TabsTrigger>
-                <TabsTrigger value="rombel">Rombel</TabsTrigger>
+                <TabsTrigger value="kelas">Kelas</TabsTrigger>
               </TabsList>
               
               <TabsContent value="guru" className="mt-6">
@@ -98,8 +98,8 @@ const AdminDashboard = ({ currentUser, users, setUsers, rombels, setRombels, onL
                 <SiswaManagement users={users} setUsers={setUsers} rombels={rombels} />
               </TabsContent>
               
-              <TabsContent value="rombel" className="mt-6">
-                <RombelManagement users={users} setUsers={setUsers} rombels={rombels} setRombels={setRombels} />
+              <TabsContent value="kelas" className="mt-6">
+                <KelasManagement users={users} setUsers={setUsers} rombels={rombels} setRombels={setRombels} />
               </TabsContent>
             </Tabs>
           </CardContent>

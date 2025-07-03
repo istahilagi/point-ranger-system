@@ -2,7 +2,8 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Trophy, Star, Users, Award, LogOut } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Trophy, Star, Users, Award, LogOut, Building2 } from 'lucide-react';
 import { User, Rombel, PointHistory } from '../pages/Index';
 
 interface SiswaDashboardProps {
@@ -14,11 +15,25 @@ interface SiswaDashboardProps {
 }
 
 const SiswaDashboard = ({ currentUser, users, rombels, pointHistories, onLogout }: SiswaDashboardProps) => {
+  // Get current user's class (extract from rombel name)
+  const currentKelas = currentUser.rombel?.split(' - ')[0] || '';
+  
+  // Rankings
   const siswaSeRombel = users
     .filter(u => u.role === 'siswa' && u.rombel === currentUser.rombel)
     .sort((a, b) => (b.points || 0) - (a.points || 0));
 
-  const myRank = siswaSeRombel.findIndex(s => s.id === currentUser.id) + 1;
+  const siswaSeKelas = users
+    .filter(u => u.role === 'siswa' && u.rombel?.startsWith(currentKelas))
+    .sort((a, b) => (b.points || 0) - (a.points || 0));
+
+  const semuaSiswa = users
+    .filter(u => u.role === 'siswa')
+    .sort((a, b) => (b.points || 0) - (a.points || 0));
+
+  const myRankRombel = siswaSeRombel.findIndex(s => s.id === currentUser.id) + 1;
+  const myRankKelas = siswaSeKelas.findIndex(s => s.id === currentUser.id) + 1;
+  const myRankUmum = semuaSiswa.findIndex(s => s.id === currentUser.id) + 1;
   const myPoints = currentUser.points || 0;
 
   const myPointHistory = pointHistories
@@ -38,6 +53,55 @@ const SiswaDashboard = ({ currentUser, users, rombels, pointHistories, onLogout 
     if (rank === 3) return <Award className="h-5 w-5 text-orange-500" />;
     return <Users className="h-5 w-5 text-blue-500" />;
   };
+
+  const renderRankingList = (siswaList: User[], currentRank: number, title: string) => (
+    <div className="space-y-3">
+      <h3 className="font-semibold text-gray-900 mb-4">{title}</h3>
+      {siswaList.slice(0, 10).map((siswa, index) => {
+        const rank = index + 1;
+        const isCurrentUser = siswa.id === currentUser.id;
+        
+        return (
+          <div
+            key={siswa.id}
+            className={`flex items-center justify-between p-3 rounded-lg border-2 transition-all ${
+              isCurrentUser 
+                ? 'bg-blue-100 border-blue-300 shadow-md' 
+                : 'bg-white border-gray-200 hover:bg-gray-50'
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <div className={`flex items-center justify-center w-8 h-8 rounded-full border-2 ${getRankColor(rank)}`}>
+                {getRankIcon(rank)}
+              </div>
+              <div>
+                <p className={`font-semibold ${isCurrentUser ? 'text-blue-900' : 'text-gray-900'}`}>
+                  {siswa.nama} {isCurrentUser && '(Saya)'}
+                </p>
+                <p className="text-sm text-gray-600">{siswa.rombel}</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="flex items-center gap-1">
+                <Star className="h-4 w-4 text-yellow-500" />
+                <span className="font-bold text-lg">{siswa.points || 0}</span>
+              </div>
+              <Badge variant={rank <= 3 ? 'default' : 'secondary'} className="text-xs">
+                #{rank}
+              </Badge>
+            </div>
+          </div>
+        );
+      })}
+      
+      {siswaList.length === 0 && (
+        <div className="text-center py-8">
+          <Users className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+          <p className="text-gray-500 text-sm">Belum ada data peringkat</p>
+        </div>
+      )}
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
@@ -59,96 +123,81 @@ const SiswaDashboard = ({ currentUser, users, rombels, pointHistories, onLogout 
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Poin Saya</CardTitle>
+              <CardTitle className="text-sm font-medium">Total Poin</CardTitle>
               <Star className="h-4 w-4" />
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold">{myPoints}</div>
-              <p className="text-xs text-blue-100">Poin yang terkumpul</p>
+              <p className="text-xs text-blue-100">Poin terkumpul</p>
             </CardContent>
           </Card>
           
           <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Peringkat Saya</CardTitle>
+              <CardTitle className="text-sm font-medium">Peringkat Rombel</CardTitle>
               <Trophy className="h-4 w-4" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">#{myRank}</div>
+              <div className="text-3xl font-bold">#{myRankRombel}</div>
               <p className="text-xs text-green-100">Dari {siswaSeRombel.length} siswa</p>
             </CardContent>
           </Card>
           
           <Card className="bg-gradient-to-r from-purple-500 to-purple-600 text-white">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Rombel</CardTitle>
-              <Users className="h-4 w-4" />
+              <CardTitle className="text-sm font-medium">Peringkat Kelas</CardTitle>
+              <Building2 className="h-4 w-4" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">{currentUser.rombel}</div>
-              <p className="text-xs text-purple-100">Kelas saya</p>
+              <div className="text-3xl font-bold">#{myRankKelas}</div>
+              <p className="text-xs text-purple-100">Dari {siswaSeKelas.length} siswa</p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Peringkat Umum</CardTitle>
+              <Award className="h-4 w-4" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">#{myRankUmum}</div>
+              <p className="text-xs text-orange-100">Dari {semuaSiswa.length} siswa</p>
             </CardContent>
           </Card>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Peringkat Rombel */}
-          <Card className="shadow-lg">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Peringkat Tabs */}
+          <Card className="shadow-lg lg:col-span-2">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Trophy className="h-5 w-5 text-yellow-500" />
-                Peringkat Rombel {currentUser.rombel}
+                Peringkat Siswa
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
-                {siswaSeRombel.map((siswa, index) => {
-                  const rank = index + 1;
-                  const isCurrentUser = siswa.id === currentUser.id;
-                  
-                  return (
-                    <div
-                      key={siswa.id}
-                      className={`flex items-center justify-between p-4 rounded-lg border-2 transition-all ${
-                        isCurrentUser 
-                          ? 'bg-blue-100 border-blue-300 shadow-md' 
-                          : 'bg-white border-gray-200 hover:bg-gray-50'
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className={`flex items-center justify-center w-8 h-8 rounded-full border-2 ${getRankColor(rank)}`}>
-                          {getRankIcon(rank)}
-                        </div>
-                        <div>
-                          <p className={`font-semibold ${isCurrentUser ? 'text-blue-900' : 'text-gray-900'}`}>
-                            {siswa.nama} {isCurrentUser && '(Saya)'}
-                          </p>
-                          <p className="text-sm text-gray-600">@{siswa.username}</p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="flex items-center gap-1">
-                          <Star className="h-4 w-4 text-yellow-500" />
-                          <span className="font-bold text-lg">{siswa.points || 0}</span>
-                        </div>
-                        <Badge variant={rank <= 3 ? 'default' : 'secondary'} className="text-xs">
-                          Peringkat #{rank}
-                        </Badge>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {siswaSeRombel.length === 0 && (
-                <div className="text-center py-8">
-                  <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-500">Belum ada data peringkat</p>
-                </div>
-              )}
+              <Tabs defaultValue="rombel" className="w-full">
+                <TabsList className="grid w-full grid-cols-3">
+                  <TabsTrigger value="rombel">Rombel</TabsTrigger>
+                  <TabsTrigger value="kelas">Kelas</TabsTrigger>
+                  <TabsTrigger value="umum">Umum</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="rombel" className="mt-4">
+                  {renderRankingList(siswaSeRombel, myRankRombel, `Peringkat ${currentUser.rombel}`)}
+                </TabsContent>
+                
+                <TabsContent value="kelas" className="mt-4">
+                  {renderRankingList(siswaSeKelas, myRankKelas, `Peringkat ${currentKelas}`)}
+                </TabsContent>
+                
+                <TabsContent value="umum" className="mt-4">
+                  {renderRankingList(semuaSiswa, myRankUmum, 'Peringkat Umum Semua Siswa')}
+                </TabsContent>
+              </Tabs>
             </CardContent>
           </Card>
 
