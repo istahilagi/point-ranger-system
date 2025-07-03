@@ -1,4 +1,3 @@
-
 import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,7 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Users, Star, Upload, Download } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Plus, Users, Star, Upload, Download, Camera } from 'lucide-react';
 import { User, Rombel } from '../../pages/Index';
 import * as XLSX from 'xlsx';
 
@@ -23,9 +23,11 @@ const SiswaManagement = ({ users, setUsers, rombels }: SiswaManagementProps) => 
     nama: '',
     rombel: '',
     username: '',
-    password: ''
+    password: '',
+    foto: ''
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const photoInputRef = useRef<HTMLInputElement>(null);
 
   const siswas = users.filter(u => u.role === 'siswa');
 
@@ -38,12 +40,24 @@ const SiswaManagement = ({ users, setUsers, rombels }: SiswaManagementProps) => 
       password: formData.password,
       role: 'siswa',
       rombel: formData.rombel,
-      points: 0
+      points: 0,
+      foto: formData.foto
     };
     
     setUsers([...users, newSiswa]);
-    setFormData({ nama: '', rombel: '', username: '', password: '' });
+    setFormData({ nama: '', rombel: '', username: '', password: '', foto: '' });
     setIsDialogOpen(false);
+  };
+
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setFormData({...formData, foto: event.target?.result as string});
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleImportExcel = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -78,7 +92,6 @@ const SiswaManagement = ({ users, setUsers, rombels }: SiswaManagementProps) => 
     };
     reader.readAsArrayBuffer(file);
     
-    // Reset file input
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -134,11 +147,40 @@ const SiswaManagement = ({ users, setUsers, rombels }: SiswaManagementProps) => 
                 Tambahkan Siswa
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="max-w-md">
               <DialogHeader>
                 <DialogTitle>Tambah Siswa Baru</DialogTitle>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="foto">Foto Siswa</Label>
+                  <div className="flex items-center gap-4">
+                    <Avatar className="h-16 w-16">
+                      <AvatarImage src={formData.foto} alt="Preview" />
+                      <AvatarFallback>
+                        <Camera className="h-6 w-6 text-gray-400" />
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <input
+                        type="file"
+                        ref={photoInputRef}
+                        onChange={handlePhotoUpload}
+                        accept="image/*"
+                        className="hidden"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => photoInputRef.current?.click()}
+                      >
+                        <Upload className="h-4 w-4 mr-2" />
+                        Upload Foto
+                      </Button>
+                    </div>
+                  </div>
+                </div>
                 <div className="space-y-2">
                   <Label htmlFor="nama">Nama</Label>
                   <Input
@@ -198,12 +240,17 @@ const SiswaManagement = ({ users, setUsers, rombels }: SiswaManagementProps) => 
         {siswas.map((siswa) => (
           <Card key={siswa.id} className="hover:shadow-md transition-shadow">
             <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Users className="h-5 w-5 text-green-500" />
-                  {siswa.nama}
-                </CardTitle>
-                <Badge variant="secondary">Siswa</Badge>
+              <div className="flex items-center gap-3">
+                <Avatar className="h-12 w-12">
+                  <AvatarImage src={siswa.foto} alt={siswa.nama} />
+                  <AvatarFallback>{siswa.nama.charAt(0)}</AvatarFallback>
+                </Avatar>
+                <div className="flex-1">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    {siswa.nama}
+                  </CardTitle>
+                  <Badge variant="secondary">Siswa</Badge>
+                </div>
               </div>
             </CardHeader>
             <CardContent>

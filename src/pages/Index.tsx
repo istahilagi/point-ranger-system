@@ -1,8 +1,10 @@
+
 import { useState } from 'react';
 import LoginPage from '../components/LoginPage';
 import AdminDashboard from '../components/AdminDashboard';
 import GuruDashboard from '../components/GuruDashboard';
 import SiswaDashboard from '../components/SiswaDashboard';
+import RankingPage from '../components/RankingPage';
 
 export interface User {
   id: string;
@@ -12,6 +14,7 @@ export interface User {
   role: 'administrator' | 'guru' | 'siswa';
   rombel?: string;
   points?: number;
+  foto?: string;
 }
 
 export interface Rombel {
@@ -29,16 +32,65 @@ export interface PointHistory {
   tanggal: string;
 }
 
+export interface Kelas {
+  id: string;
+  nama: string;
+  active: boolean;
+}
+
 const Index = () => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [showRanking, setShowRanking] = useState(false);
   
-  // Mock data with class structure
+  // Mock data with class structure and photos
   const [users, setUsers] = useState<User[]>([
     { id: '1', nama: 'Admin', username: 'admin', password: 'admin123', role: 'administrator' },
     { id: '2', nama: 'Pak Budi', username: 'budi', password: 'guru123', role: 'guru' },
-    { id: '3', nama: 'Ahmad', username: 'ahmad', password: 'siswa123', role: 'siswa', rombel: 'Kelas 1 - A', points: 85 },
-    { id: '4', nama: 'Siti', username: 'siti', password: 'siswa123', role: 'siswa', rombel: 'Kelas 1 - A', points: 92 },
-    { id: '5', nama: 'Budi', username: 'budisiswa', password: 'siswa123', role: 'siswa', rombel: 'Kelas 2 - B', points: 78 }
+    { 
+      id: '3', 
+      nama: 'Ahmad', 
+      username: 'ahmad', 
+      password: 'siswa123', 
+      role: 'siswa', 
+      rombel: 'Kelas 1 - A', 
+      points: 85,
+      foto: 'https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?w=200&h=200&fit=crop&crop=face'
+    },
+    { 
+      id: '4', 
+      nama: 'Siti', 
+      username: 'siti', 
+      password: 'siswa123', 
+      role: 'siswa', 
+      rombel: 'Kelas 1 - A', 
+      points: 92,
+      foto: 'https://images.unsplash.com/photo-1535268647677-300dbf3d78d1?w=200&h=200&fit=crop&crop=face'
+    },
+    { 
+      id: '5', 
+      nama: 'Budi', 
+      username: 'budisiswa', 
+      password: 'siswa123', 
+      role: 'siswa', 
+      rombel: 'Kelas 2 - B', 
+      points: 78,
+      foto: 'https://images.unsplash.com/photo-1501286353178-1ec881214838?w=200&h=200&fit=crop&crop=face'
+    }
+  ]);
+  
+  const [kelas, setKelas] = useState<Kelas[]>([
+    { id: '1', nama: 'Kelas 1', active: true },
+    { id: '2', nama: 'Kelas 2', active: true },
+    { id: '3', nama: 'Kelas 3', active: true },
+    { id: '4', nama: 'Kelas 4', active: false },
+    { id: '5', nama: 'Kelas 5', active: false },
+    { id: '6', nama: 'Kelas 6', active: false },
+    { id: '7', nama: 'Kelas 7', active: false },
+    { id: '8', nama: 'Kelas 8', active: false },
+    { id: '9', nama: 'Kelas 9', active: false },
+    { id: '10', nama: 'Kelas 10', active: false },
+    { id: '11', nama: 'Kelas 11', active: false },
+    { id: '12', nama: 'Kelas 12', active: false }
   ]);
   
   const [rombels, setRombels] = useState<Rombel[]>([
@@ -57,7 +109,7 @@ const Index = () => {
       guruId: '2',
       points: 10,
       keterangan: 'Aktif dalam diskusi kelas',
-      tanggal: '2024-01-15'
+      tanggal: new Date().toISOString().split('T')[0]
     },
     {
       id: '2',
@@ -65,7 +117,15 @@ const Index = () => {
       guruId: '2',
       points: 8,
       keterangan: 'Menyelesaikan tugas dengan baik',
-      tanggal: '2024-01-14'
+      tanggal: new Date().toISOString().split('T')[0]
+    },
+    {
+      id: '3',
+      siswaId: '5',
+      guruId: '2',
+      points: -5,
+      keterangan: 'Terlambat masuk kelas',
+      tanggal: new Date().toISOString().split('T')[0]
     }
   ]);
 
@@ -75,10 +135,36 @@ const Index = () => {
 
   const handleLogout = () => {
     setCurrentUser(null);
+    setShowRanking(false);
   };
 
+  const handleShowRanking = () => {
+    setShowRanking(true);
+  };
+
+  const handleBackToLogin = () => {
+    setShowRanking(false);
+  };
+
+  if (showRanking) {
+    return (
+      <RankingPage
+        users={users}
+        kelas={kelas}
+        pointHistories={pointHistories}
+        onBack={handleBackToLogin}
+      />
+    );
+  }
+
   if (!currentUser) {
-    return <LoginPage users={users} onLogin={handleLogin} />;
+    return (
+      <LoginPage 
+        users={users} 
+        onLogin={handleLogin} 
+        onShowRanking={handleShowRanking}
+      />
+    );
   }
 
   return (
@@ -90,6 +176,8 @@ const Index = () => {
           setUsers={setUsers}
           rombels={rombels}
           setRombels={setRombels}
+          kelas={kelas}
+          setKelas={setKelas}
           onLogout={handleLogout}
         />
       )}
@@ -99,6 +187,7 @@ const Index = () => {
           users={users}
           setUsers={setUsers}
           rombels={rombels}
+          kelas={kelas}
           pointHistories={pointHistories}
           setPointHistories={setPointHistories}
           onLogout={handleLogout}

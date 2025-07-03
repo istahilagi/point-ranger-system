@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Trophy, Star, Users, Award, LogOut, Building2 } from 'lucide-react';
 import { User, Rombel, PointHistory } from '../pages/Index';
 
@@ -15,10 +16,8 @@ interface SiswaDashboardProps {
 }
 
 const SiswaDashboard = ({ currentUser, users, rombels, pointHistories, onLogout }: SiswaDashboardProps) => {
-  // Get current user's class (extract from rombel name)
   const currentKelas = currentUser.rombel?.split(' - ')[0] || '';
   
-  // Rankings
   const siswaSeRombel = users
     .filter(u => u.role === 'siswa' && u.rombel === currentUser.rombel)
     .sort((a, b) => (b.points || 0) - (a.points || 0));
@@ -48,15 +47,15 @@ const SiswaDashboard = ({ currentUser, users, rombels, pointHistories, onLogout 
   };
 
   const getRankIcon = (rank: number) => {
-    if (rank === 1) return <Trophy className="h-5 w-5 text-yellow-500" />;
-    if (rank === 2) return <Award className="h-5 w-5 text-gray-500" />;
-    if (rank === 3) return <Award className="h-5 w-5 text-orange-500" />;
-    return <Users className="h-5 w-5 text-blue-500" />;
+    if (rank === 1) return <Trophy className="h-4 w-4 text-yellow-500" />;
+    if (rank === 2) return <Award className="h-4 w-4 text-gray-500" />;
+    if (rank === 3) return <Award className="h-4 w-4 text-orange-500" />;
+    return <Users className="h-4 w-4 text-blue-500" />;
   };
 
   const renderRankingList = (siswaList: User[], currentRank: number, title: string) => (
-    <div className="space-y-3">
-      <h3 className="font-semibold text-gray-900 mb-4">{title}</h3>
+    <div className="space-y-2">
+      <h3 className="font-semibold text-gray-900 mb-3 text-sm">{title}</h3>
       {siswaList.slice(0, 10).map((siswa, index) => {
         const rank = index + 1;
         const isCurrentUser = siswa.id === currentUser.id;
@@ -64,27 +63,31 @@ const SiswaDashboard = ({ currentUser, users, rombels, pointHistories, onLogout 
         return (
           <div
             key={siswa.id}
-            className={`flex items-center justify-between p-3 rounded-lg border-2 transition-all ${
+            className={`flex items-center justify-between p-2 rounded-lg border transition-all ${
               isCurrentUser 
-                ? 'bg-blue-100 border-blue-300 shadow-md' 
-                : 'bg-white border-gray-200 hover:bg-gray-50'
+                ? 'bg-blue-100 border-blue-300 shadow-sm' 
+                : 'bg-white border-gray-200'
             }`}
           >
-            <div className="flex items-center gap-3">
-              <div className={`flex items-center justify-center w-8 h-8 rounded-full border-2 ${getRankColor(rank)}`}>
+            <div className="flex items-center gap-2 min-w-0 flex-1">
+              <div className={`flex items-center justify-center w-6 h-6 rounded-full border ${getRankColor(rank)}`}>
                 {getRankIcon(rank)}
               </div>
-              <div>
-                <p className={`font-semibold ${isCurrentUser ? 'text-blue-900' : 'text-gray-900'}`}>
+              <Avatar className="h-8 w-8">
+                <AvatarImage src={siswa.foto} alt={siswa.nama} />
+                <AvatarFallback className="text-xs">{siswa.nama.charAt(0)}</AvatarFallback>
+              </Avatar>
+              <div className="min-w-0 flex-1">
+                <p className={`text-sm font-semibold truncate ${isCurrentUser ? 'text-blue-900' : 'text-gray-900'}`}>
                   {siswa.nama} {isCurrentUser && '(Saya)'}
                 </p>
-                <p className="text-sm text-gray-600">{siswa.rombel}</p>
+                <p className="text-xs text-gray-600 truncate">{siswa.rombel}</p>
               </div>
             </div>
             <div className="text-right">
               <div className="flex items-center gap-1">
-                <Star className="h-4 w-4 text-yellow-500" />
-                <span className="font-bold text-lg">{siswa.points || 0}</span>
+                <Star className="h-3 w-3 text-yellow-500" />
+                <span className="text-sm font-bold">{siswa.points || 0}</span>
               </div>
               <Badge variant={rank <= 3 ? 'default' : 'secondary'} className="text-xs">
                 #{rank}
@@ -95,9 +98,9 @@ const SiswaDashboard = ({ currentUser, users, rombels, pointHistories, onLogout 
       })}
       
       {siswaList.length === 0 && (
-        <div className="text-center py-8">
-          <Users className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-          <p className="text-gray-500 text-sm">Belum ada data peringkat</p>
+        <div className="text-center py-6">
+          <Users className="h-6 w-6 text-gray-400 mx-auto mb-2" />
+          <p className="text-gray-500 text-xs">Belum ada data peringkat</p>
         </div>
       )}
     </div>
@@ -105,96 +108,100 @@ const SiswaDashboard = ({ currentUser, users, rombels, pointHistories, onLogout 
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Dashboard Siswa</h1>
-              <p className="text-gray-600">Selamat datang, {currentUser.nama}</p>
+      {/* Mobile-optimized Header */}
+      <div className="bg-white shadow-sm border-b sticky top-0 z-10">
+        <div className="px-4 py-3">
+          <div className="flex justify-between items-center">
+            <div className="min-w-0 flex-1">
+              <h1 className="text-xl font-bold text-gray-900 truncate">Dashboard Siswa</h1>
+              <p className="text-sm text-gray-600 truncate">Selamat datang, {currentUser.nama}</p>
             </div>
-            <Button onClick={onLogout} variant="outline" className="flex items-center gap-2">
+            <Button onClick={onLogout} variant="outline" size="sm" className="flex items-center gap-1">
               <LogOut className="h-4 w-4" />
-              Keluar
+              <span className="hidden sm:inline">Keluar</span>
             </Button>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+      <div className="px-4 py-4">
+        {/* Mobile Stats Cards */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
           <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Poin</CardTitle>
-              <Star className="h-4 w-4" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">{myPoints}</div>
-              <p className="text-xs text-blue-100">Poin terkumpul</p>
+            <CardContent className="p-3">
+              <div className="flex items-center gap-2">
+                <Star className="h-4 w-4" />
+                <div>
+                  <div className="text-lg font-bold">{myPoints}</div>
+                  <p className="text-xs text-blue-100">Total Poin</p>
+                </div>
+              </div>
             </CardContent>
           </Card>
           
           <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Peringkat Rombel</CardTitle>
-              <Trophy className="h-4 w-4" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">#{myRankRombel}</div>
-              <p className="text-xs text-green-100">Dari {siswaSeRombel.length} siswa</p>
+            <CardContent className="p-3">
+              <div className="flex items-center gap-2">
+                <Trophy className="h-4 w-4" />
+                <div>
+                  <div className="text-lg font-bold">#{myRankRombel}</div>
+                  <p className="text-xs text-green-100">Rank Rombel</p>
+                </div>
+              </div>
             </CardContent>
           </Card>
           
           <Card className="bg-gradient-to-r from-purple-500 to-purple-600 text-white">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Peringkat Kelas</CardTitle>
-              <Building2 className="h-4 w-4" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">#{myRankKelas}</div>
-              <p className="text-xs text-purple-100">Dari {siswaSeKelas.length} siswa</p>
+            <CardContent className="p-3">
+              <div className="flex items-center gap-2">
+                <Building2 className="h-4 w-4" />
+                <div>
+                  <div className="text-lg font-bold">#{myRankKelas}</div>
+                  <p className="text-xs text-purple-100">Rank Kelas</p>
+                </div>
+              </div>
             </CardContent>
           </Card>
 
           <Card className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Peringkat Umum</CardTitle>
-              <Award className="h-4 w-4" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">#{myRankUmum}</div>
-              <p className="text-xs text-orange-100">Dari {semuaSiswa.length} siswa</p>
+            <CardContent className="p-3">
+              <div className="flex items-center gap-2">
+                <Award className="h-4 w-4" />
+                <div>
+                  <div className="text-lg font-bold">#{myRankUmum}</div>
+                  <p className="text-xs text-orange-100">Rank Umum</p>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {/* Peringkat Tabs */}
           <Card className="shadow-lg lg:col-span-2">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-lg">
                 <Trophy className="h-5 w-5 text-yellow-500" />
                 Peringkat Siswa
               </CardTitle>
             </CardHeader>
             <CardContent>
               <Tabs defaultValue="rombel" className="w-full">
-                <TabsList className="grid w-full grid-cols-3">
-                  <TabsTrigger value="rombel">Rombel</TabsTrigger>
-                  <TabsTrigger value="kelas">Kelas</TabsTrigger>
-                  <TabsTrigger value="umum">Umum</TabsTrigger>
+                <TabsList className="grid w-full grid-cols-3 mb-4">
+                  <TabsTrigger value="rombel" className="text-xs">Rombel</TabsTrigger>
+                  <TabsTrigger value="kelas" className="text-xs">Kelas</TabsTrigger>
+                  <TabsTrigger value="umum" className="text-xs">Umum</TabsTrigger>
                 </TabsList>
                 
-                <TabsContent value="rombel" className="mt-4">
+                <TabsContent value="rombel">
                   {renderRankingList(siswaSeRombel, myRankRombel, `Peringkat ${currentUser.rombel}`)}
                 </TabsContent>
                 
-                <TabsContent value="kelas" className="mt-4">
+                <TabsContent value="kelas">
                   {renderRankingList(siswaSeKelas, myRankKelas, `Peringkat ${currentKelas}`)}
                 </TabsContent>
                 
-                <TabsContent value="umum" className="mt-4">
+                <TabsContent value="umum">
                   {renderRankingList(semuaSiswa, myRankUmum, 'Peringkat Umum Semua Siswa')}
                 </TabsContent>
               </Tabs>
@@ -203,31 +210,36 @@ const SiswaDashboard = ({ currentUser, users, rombels, pointHistories, onLogout 
 
           {/* Riwayat Poin */}
           <Card className="shadow-lg">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-lg">
                 <Star className="h-5 w-5 text-blue-500" />
                 Riwayat Poin Saya
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {myPointHistory.slice(0, 10).map((history) => {
                   const guru = users.find(u => u.id === history.guruId);
+                  const isNegative = history.points < 0;
                   return (
                     <div
                       key={history.id}
-                      className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200"
+                      className={`flex items-center justify-between p-2 rounded-lg border ${
+                        isNegative ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200'
+                      }`}
                     >
-                      <div>
+                      <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
-                          <Star className="h-4 w-4 text-green-500" />
-                          <span className="font-semibold text-green-700">+{history.points} poin</span>
+                          <Star className={`h-3 w-3 ${isNegative ? 'text-red-500' : 'text-green-500'}`} />
+                          <span className={`text-sm font-semibold ${isNegative ? 'text-red-700' : 'text-green-700'}`}>
+                            {history.points > 0 ? '+' : ''}{history.points} poin
+                          </span>
                         </div>
-                        <p className="text-sm text-gray-600 mt-1">
+                        <p className="text-xs text-gray-600 mt-1">
                           Dari: {guru?.nama || 'Guru'}
                         </p>
                         {history.keterangan && (
-                          <p className="text-xs text-gray-500 mt-1">
+                          <p className="text-xs text-gray-500 mt-1 truncate">
                             "{history.keterangan}"
                           </p>
                         )}
@@ -241,9 +253,9 @@ const SiswaDashboard = ({ currentUser, users, rombels, pointHistories, onLogout 
               </div>
 
               {myPointHistory.length === 0 && (
-                <div className="text-center py-8">
-                  <Star className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-500">Belum ada riwayat poin</p>
+                <div className="text-center py-6">
+                  <Star className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                  <p className="text-gray-500 text-xs">Belum ada riwayat poin</p>
                 </div>
               )}
             </CardContent>
