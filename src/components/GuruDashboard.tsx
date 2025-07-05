@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -57,7 +56,7 @@ const GuruDashboard = ({
 
     const updatedUsers = users.map(u => 
       u.id === selectedSiswa.id 
-        ? { ...u, points: Math.max(0, (u.points || 0) + finalPoints) }
+        ? { ...u, points: (u.points || 0) + finalPoints }
         : u
     );
     setUsers(updatedUsers);
@@ -174,9 +173,13 @@ const GuruDashboard = ({
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
-                      <div className="flex items-center justify-center gap-2 py-3 bg-yellow-50 rounded-lg">
-                        <Star className="h-5 w-5 text-yellow-500" />
-                        <span className="text-xl font-bold text-gray-900">{siswa.points || 0}</span>
+                      <div className={`flex items-center justify-center gap-2 py-3 rounded-lg ${
+                        (siswa.points || 0) < 0 ? 'bg-red-50' : 'bg-yellow-50'
+                      }`}>
+                        <Star className={`h-5 w-5 ${(siswa.points || 0) < 0 ? 'text-red-500' : 'text-yellow-500'}`} />
+                        <span className={`text-xl font-bold ${(siswa.points || 0) < 0 ? 'text-red-700' : 'text-gray-900'}`}>
+                          {siswa.points || 0}
+                        </span>
                         <span className="text-gray-600">poin</span>
                       </div>
                       

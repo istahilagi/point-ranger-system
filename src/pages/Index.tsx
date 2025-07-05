@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import LoginPage from '../components/LoginPage';
 import AdminDashboard from '../components/AdminDashboard';
@@ -42,7 +41,7 @@ const Index = () => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [showRanking, setShowRanking] = useState(false);
   
-  // Mock data with class structure and photos
+  // Mock data with class structure and photos - PERBAIKAN: Tambah siswa dengan poin negatif
   const [users, setUsers] = useState<User[]>([
     { id: '1', nama: 'Admin', username: 'admin', password: 'admin123', role: 'administrator' },
     { id: '2', nama: 'Pak Budi', username: 'budi', password: 'guru123', role: 'guru' },
@@ -73,8 +72,18 @@ const Index = () => {
       password: 'siswa123', 
       role: 'siswa', 
       rombel: 'Kelas 2 - B', 
-      points: 78,
+      points: -15, // PERBAIKAN: Contoh siswa dengan poin negatif
       foto: 'https://images.unsplash.com/photo-1501286353178-1ec881214838?w=200&h=200&fit=crop&crop=face'
+    },
+    { 
+      id: '6', 
+      nama: 'Ani', 
+      username: 'ani', 
+      password: 'siswa123', 
+      role: 'siswa', 
+      rombel: 'Kelas 1 - A', 
+      points: -5, // PERBAIKAN: Contoh siswa dengan poin negatif
+      foto: 'https://images.unsplash.com/photo-1494790108755-2616c1e5f2ca?w=200&h=200&fit=crop&crop=face'
     }
   ]);
   
@@ -94,7 +103,7 @@ const Index = () => {
   ]);
   
   const [rombels, setRombels] = useState<Rombel[]>([
-    { id: '1', nama: 'Kelas 1 - A', siswa: ['3', '4'] },
+    { id: '1', nama: 'Kelas 1 - A', siswa: ['3', '4', '6'] },
     { id: '2', nama: 'Kelas 1 - B', siswa: [] },
     { id: '3', nama: 'Kelas 2 - A', siswa: [] },
     { id: '4', nama: 'Kelas 2 - B', siswa: ['5'] },
@@ -123,8 +132,16 @@ const Index = () => {
       id: '3',
       siswaId: '5',
       guruId: '2',
+      points: -15,
+      keterangan: 'Terlambat masuk kelas berulang kali',
+      tanggal: new Date().toISOString().split('T')[0]
+    },
+    {
+      id: '4',
+      siswaId: '6',
+      guruId: '2',
       points: -5,
-      keterangan: 'Terlambat masuk kelas',
+      keterangan: 'Tidak mengerjakan PR',
       tanggal: new Date().toISOString().split('T')[0]
     }
   ]);
