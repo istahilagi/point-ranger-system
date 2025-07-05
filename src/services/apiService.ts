@@ -1,6 +1,6 @@
 
 // API Service untuk integrasi dengan MySQL custom API
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3001/api';
+const API_BASE_URL = 'https://man1halteng.alhastream.com/api';
 
 export interface ApiResponse<T> {
   success: boolean;

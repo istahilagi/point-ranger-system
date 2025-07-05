@@ -1,9 +1,11 @@
-import { useState } from 'react';
+
+import { useState, useEffect } from 'react';
 import LoginPage from '../components/LoginPage';
 import AdminDashboard from '../components/AdminDashboard';
 import GuruDashboard from '../components/GuruDashboard';
 import SiswaDashboard from '../components/SiswaDashboard';
 import RankingPage from '../components/RankingPage';
+import { useUsers, useKelas, useRombel, usePointHistory } from '../hooks/useApi';
 
 export interface User {
   id: string;
@@ -41,7 +43,13 @@ const Index = () => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [showRanking, setShowRanking] = useState(false);
   
-  // Mock data with class structure and photos - PERBAIKAN: Tambah siswa dengan poin negatif
+  // Using API hooks to fetch data
+  const { data: usersData, loading: usersLoading, refetch: refetchUsers } = useUsers();
+  const { data: kelasData, loading: kelasLoading, refetch: refetchKelas } = useKelas();
+  const { data: rombelData, loading: rombelLoading, refetch: refetchRombel } = useRombel();
+  const { data: pointHistoryData, loading: pointHistoryLoading, refetch: refetchPointHistory } = usePointHistory();
+  
+  // Fallback to mock data if API is not available
   const [users, setUsers] = useState<User[]>([
     { id: '1', nama: 'Admin', username: 'admin', password: 'admin123', role: 'administrator' },
     { id: '2', nama: 'Pak Budi', username: 'budi', password: 'guru123', role: 'guru' },
@@ -72,7 +80,7 @@ const Index = () => {
       password: 'siswa123', 
       role: 'siswa', 
       rombel: 'Kelas 2 - B', 
-      points: -15, // PERBAIKAN: Contoh siswa dengan poin negatif
+      points: -15,
       foto: 'https://images.unsplash.com/photo-1501286353178-1ec881214838?w=200&h=200&fit=crop&crop=face'
     },
     { 
@@ -82,7 +90,7 @@ const Index = () => {
       password: 'siswa123', 
       role: 'siswa', 
       rombel: 'Kelas 1 - A', 
-      points: -5, // PERBAIKAN: Contoh siswa dengan poin negatif
+      points: -5,
       foto: 'https://images.unsplash.com/photo-1494790108755-2616c1e5f2ca?w=200&h=200&fit=crop&crop=face'
     }
   ]);
@@ -146,6 +154,31 @@ const Index = () => {
     }
   ]);
 
+  // Update state when API data is loaded
+  useEffect(() => {
+    if (usersData && !usersLoading) {
+      setUsers(usersData);
+    }
+  }, [usersData, usersLoading]);
+
+  useEffect(() => {
+    if (kelasData && !kelasLoading) {
+      setKelas(kelasData);
+    }
+  }, [kelasData, kelasLoading]);
+
+  useEffect(() => {
+    if (rombelData && !rombelLoading) {
+      setRombels(rombelData);
+    }
+  }, [rombelData, rombelLoading]);
+
+  useEffect(() => {
+    if (pointHistoryData && !pointHistoryLoading) {
+      setPointHistories(pointHistoryData);
+    }
+  }, [pointHistoryData, pointHistoryLoading]);
+
   const handleLogin = (user: User) => {
     setCurrentUser(user);
   };
@@ -161,6 +194,26 @@ const Index = () => {
 
   const handleBackToLogin = () => {
     setShowRanking(false);
+  };
+
+  const updateUsers = (newUsers: User[]) => {
+    setUsers(newUsers);
+    refetchUsers();
+  };
+
+  const updateKelas = (newKelas: Kelas[]) => {
+    setKelas(newKelas);
+    refetchKelas();
+  };
+
+  const updateRombels = (newRombels: Rombel[]) => {
+    setRombels(newRombels);
+    refetchRombel();
+  };
+
+  const updatePointHistories = (newPointHistories: PointHistory[]) => {
+    setPointHistories(newPointHistories);
+    refetchPointHistory();
   };
 
   if (showRanking) {
@@ -190,11 +243,11 @@ const Index = () => {
         <AdminDashboard
           currentUser={currentUser}
           users={users}
-          setUsers={setUsers}
+          setUsers={updateUsers}
           rombels={rombels}
-          setRombels={setRombels}
+          setRombels={updateRombels}
           kelas={kelas}
-          setKelas={setKelas}
+          setKelas={updateKelas}
           onLogout={handleLogout}
         />
       )}
@@ -202,11 +255,11 @@ const Index = () => {
         <GuruDashboard
           currentUser={currentUser}
           users={users}
-          setUsers={setUsers}
+          setUsers={updateUsers}
           rombels={rombels}
           kelas={kelas}
           pointHistories={pointHistories}
-          setPointHistories={setPointHistories}
+          setPointHistories={updatePointHistories}
           onLogout={handleLogout}
         />
       )}

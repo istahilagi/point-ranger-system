@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Label } from '@/components/ui/label';
 import { Trophy } from 'lucide-react';
 import { User } from '../pages/Index';
+import { apiService } from '../services/apiService';
 
 interface LoginPageProps {
   users: User[];
@@ -17,9 +18,26 @@ const LoginPage = ({ users, onLogin, onShowRanking }: LoginPageProps) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
+    setError('');
+
+    try {
+      // Try API login first
+      const response = await apiService.login(username, password);
+      
+      if (response.success && response.data) {
+        onLogin(response.data);
+        return;
+      }
+    } catch (apiError) {
+      console.log('API login failed, falling back to mock data');
+    }
+
+    // Fallback to mock data
     const user = users.find(u => u.username === username && u.password === password);
     
     if (user) {
@@ -27,6 +45,8 @@ const LoginPage = ({ users, onLogin, onShowRanking }: LoginPageProps) => {
     } else {
       setError('Username atau password salah!');
     }
+    
+    setLoading(false);
   };
 
   return (
@@ -54,6 +74,7 @@ const LoginPage = ({ users, onLogin, onShowRanking }: LoginPageProps) => {
                   className="h-12 text-lg border-2 focus:border-blue-500 transition-colors"
                   placeholder="Masukkan username"
                   required
+                  disabled={loading}
                 />
               </div>
               <div className="space-y-2">
@@ -66,6 +87,7 @@ const LoginPage = ({ users, onLogin, onShowRanking }: LoginPageProps) => {
                   className="h-12 text-lg border-2 focus:border-blue-500 transition-colors"
                   placeholder="Masukkan password"
                   required
+                  disabled={loading}
                 />
               </div>
               {error && (
@@ -76,8 +98,9 @@ const LoginPage = ({ users, onLogin, onShowRanking }: LoginPageProps) => {
               <Button 
                 type="submit" 
                 className="w-full h-12 text-lg font-semibold bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 transition-all duration-300 transform hover:scale-105"
+                disabled={loading}
               >
-                Masuk
+                {loading ? 'Memproses...' : 'Masuk'}
               </Button>
             </form>
             
@@ -96,6 +119,7 @@ const LoginPage = ({ users, onLogin, onShowRanking }: LoginPageProps) => {
           onClick={onShowRanking}
           variant="outline"
           className="w-full h-12 text-lg font-semibold bg-white/90 backdrop-blur-sm hover:bg-white/95 transition-all duration-300 transform hover:scale-105"
+          disabled={loading}
         >
           <Trophy className="h-5 w-5 mr-2" />
           Lihat Peringkat
