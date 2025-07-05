@@ -1,5 +1,5 @@
 // API Service untuk integrasi dengan MySQL custom API
-const API_BASE_URL = 'http://45.158.126.50:3002';
+const API_BASE_URL = 'https://man1halteng.alhastream.com/';
 
 export interface ApiResponse<T> {
   success: boolean;
