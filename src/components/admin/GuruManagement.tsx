@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -35,6 +34,7 @@ const GuruManagement = ({ users, setUsers }: GuruManagementProps) => {
     try {
       if (editingGuru) {
         // Update existing guru
+        console.log('Updating guru:', editingGuru.id, formData);
         const response = await apiService.updateUser(editingGuru.id, {
           nama: formData.nama,
           username: formData.username,
@@ -42,6 +42,8 @@ const GuruManagement = ({ users, setUsers }: GuruManagementProps) => {
           role: 'guru',
           rombel_id: null
         });
+        
+        console.log('Update response:', response);
         
         if (response.success) {
           const updatedUsers = users.map(user => 
@@ -57,6 +59,7 @@ const GuruManagement = ({ users, setUsers }: GuruManagementProps) => {
         }
       } else {
         // Add new guru
+        console.log('Creating new guru:', formData);
         const response = await apiService.createUser({
           nama: formData.nama,
           username: formData.username,
@@ -65,9 +68,11 @@ const GuruManagement = ({ users, setUsers }: GuruManagementProps) => {
           rombel_id: null
         });
         
-        if (response.success && response.data) {
+        console.log('Create response:', response);
+        
+        if (response.success && response.data && typeof response.data === 'object' && 'id' in response.data) {
           const newGuru: User = {
-            id: response.data.id,
+            id: response.data.id as string,
             nama: formData.nama,
             username: formData.username,
             password: formData.password,
@@ -105,7 +110,10 @@ const GuruManagement = ({ users, setUsers }: GuruManagementProps) => {
   const handleDelete = async (guruId: string) => {
     setIsLoading(true);
     try {
+      console.log('Deleting guru:', guruId);
       const response = await apiService.deleteUser(guruId);
+      
+      console.log('Delete response:', response);
       
       if (response.success) {
         const updatedUsers = users.filter(user => user.id !== guruId);
