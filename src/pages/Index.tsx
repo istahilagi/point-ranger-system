@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import LoginPage from '../components/LoginPage';
 import AdminDashboard from '../components/AdminDashboard';
@@ -154,28 +153,28 @@ const Index = () => {
     }
   ]);
 
-  // Update state when API data is loaded
+  // Update state when API data is loaded with proper type casting
   useEffect(() => {
     if (usersData && !usersLoading) {
-      setUsers(usersData);
+      setUsers(usersData as User[]);
     }
   }, [usersData, usersLoading]);
 
   useEffect(() => {
     if (kelasData && !kelasLoading) {
-      setKelas(kelasData);
+      setKelas(kelasData as Kelas[]);
     }
   }, [kelasData, kelasLoading]);
 
   useEffect(() => {
     if (rombelData && !rombelLoading) {
-      setRombels(rombelData);
+      setRombels(rombelData as Rombel[]);
     }
   }, [rombelData, rombelLoading]);
 
   useEffect(() => {
     if (pointHistoryData && !pointHistoryLoading) {
-      setPointHistories(pointHistoryData);
+      setPointHistories(pointHistoryData as PointHistory[]);
     }
   }, [pointHistoryData, pointHistoryLoading]);
 

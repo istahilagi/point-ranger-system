@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -30,7 +29,7 @@ const LoginPage = ({ users, onLogin, onShowRanking }: LoginPageProps) => {
       const response = await apiService.login(username, password);
       
       if (response.success && response.data) {
-        onLogin(response.data);
+        onLogin(response.data as User);
         return;
       }
     } catch (apiError) {
