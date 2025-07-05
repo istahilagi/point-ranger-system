@@ -9,6 +9,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Badge } from '@/components/ui/badge';
 import { Plus, GraduationCap, Edit, Trash2 } from 'lucide-react';
 import { User } from '../../pages/Index';
+import { apiService } from '../../services/apiService';
 
 interface GuruManagementProps {
   users: User[];
@@ -23,35 +24,72 @@ const GuruManagement = ({ users, setUsers }: GuruManagementProps) => {
     username: '',
     password: ''
   });
+  const [isLoading, setIsLoading] = useState(false);
 
   const gurus = users.filter(u => u.role === 'guru');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
     
-    if (editingGuru) {
-      // Update existing guru
-      const updatedUsers = users.map(user => 
-        user.id === editingGuru.id 
-          ? { ...user, nama: formData.nama, username: formData.username, password: formData.password }
-          : user
-      );
-      setUsers(updatedUsers);
+    try {
+      if (editingGuru) {
+        // Update existing guru
+        const response = await apiService.updateUser(editingGuru.id, {
+          nama: formData.nama,
+          username: formData.username,
+          password: formData.password,
+          role: 'guru',
+          rombel_id: null
+        });
+        
+        if (response.success) {
+          const updatedUsers = users.map(user => 
+            user.id === editingGuru.id 
+              ? { ...user, nama: formData.nama, username: formData.username, password: formData.password }
+              : user
+          );
+          setUsers(updatedUsers);
+          console.log('Guru updated successfully');
+        } else {
+          console.error('Error updating guru:', response.error);
+          alert('Error updating guru: ' + response.error);
+        }
+      } else {
+        // Add new guru
+        const response = await apiService.createUser({
+          nama: formData.nama,
+          username: formData.username,
+          password: formData.password,
+          role: 'guru',
+          rombel_id: null
+        });
+        
+        if (response.success && response.data) {
+          const newGuru: User = {
+            id: response.data.id,
+            nama: formData.nama,
+            username: formData.username,
+            password: formData.password,
+            role: 'guru'
+          };
+          setUsers([...users, newGuru]);
+          console.log('Guru created successfully');
+        } else {
+          console.error('Error creating guru:', response.error);
+          alert('Error creating guru: ' + response.error);
+        }
+      }
+      
+      setFormData({ nama: '', username: '', password: '' });
+      setIsDialogOpen(false);
       setEditingGuru(null);
-    } else {
-      // Add new guru
-      const newGuru: User = {
-        id: Date.now().toString(),
-        nama: formData.nama,
-        username: formData.username,
-        password: formData.password,
-        role: 'guru'
-      };
-      setUsers([...users, newGuru]);
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Error: ' + error);
+    } finally {
+      setIsLoading(false);
     }
-    
-    setFormData({ nama: '', username: '', password: '' });
-    setIsDialogOpen(false);
   };
 
   const handleEdit = (guru: User) => {
@@ -64,9 +102,25 @@ const GuruManagement = ({ users, setUsers }: GuruManagementProps) => {
     setIsDialogOpen(true);
   };
 
-  const handleDelete = (guruId: string) => {
-    const updatedUsers = users.filter(user => user.id !== guruId);
-    setUsers(updatedUsers);
+  const handleDelete = async (guruId: string) => {
+    setIsLoading(true);
+    try {
+      const response = await apiService.deleteUser(guruId);
+      
+      if (response.success) {
+        const updatedUsers = users.filter(user => user.id !== guruId);
+        setUsers(updatedUsers);
+        console.log('Guru deleted successfully');
+      } else {
+        console.error('Error deleting guru:', response.error);
+        alert('Error deleting guru: ' + response.error);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Error: ' + error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const resetForm = () => {
@@ -83,7 +137,7 @@ const GuruManagement = ({ users, setUsers }: GuruManagementProps) => {
           if (!open) resetForm();
         }}>
           <DialogTrigger asChild>
-            <Button className="flex items-center gap-2">
+            <Button className="flex items-center gap-2" disabled={isLoading}>
               <Plus className="h-4 w-4" />
               Tambahkan Guru
             </Button>
@@ -101,6 +155,7 @@ const GuruManagement = ({ users, setUsers }: GuruManagementProps) => {
                   onChange={(e) => setFormData({...formData, nama: e.target.value})}
                   placeholder="Masukkan nama guru"
                   required
+                  disabled={isLoading}
                 />
               </div>
               <div className="space-y-2">
@@ -111,6 +166,7 @@ const GuruManagement = ({ users, setUsers }: GuruManagementProps) => {
                   onChange={(e) => setFormData({...formData, username: e.target.value})}
                   placeholder="Masukkan username"
                   required
+                  disabled={isLoading}
                 />
               </div>
               <div className="space-y-2">
@@ -122,15 +178,22 @@ const GuruManagement = ({ users, setUsers }: GuruManagementProps) => {
                   onChange={(e) => setFormData({...formData, password: e.target.value})}
                   placeholder="Masukkan password"
                   required
+                  disabled={isLoading}
                 />
               </div>
-              <Button type="submit" className="w-full">
-                {editingGuru ? 'Update Guru' : 'Tambah Guru'}
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? 'Loading...' : (editingGuru ? 'Update Guru' : 'Tambah Guru')}
               </Button>
             </form>
           </DialogContent>
         </Dialog>
       </div>
+
+      {isLoading && (
+        <div className="text-center py-4">
+          <p className="text-gray-500">Loading...</p>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {gurus.map((guru) => (
@@ -149,6 +212,7 @@ const GuruManagement = ({ users, setUsers }: GuruManagementProps) => {
                       variant="outline"
                       onClick={() => handleEdit(guru)}
                       className="h-8 w-8 p-0"
+                      disabled={isLoading}
                     >
                       <Edit className="h-4 w-4" />
                     </Button>
@@ -158,6 +222,7 @@ const GuruManagement = ({ users, setUsers }: GuruManagementProps) => {
                           size="sm"
                           variant="outline"
                           className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                          disabled={isLoading}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -170,9 +235,9 @@ const GuruManagement = ({ users, setUsers }: GuruManagementProps) => {
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
-                          <AlertDialogCancel>Batal</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => handleDelete(guru.id)}>
-                            Hapus
+                          <AlertDialogCancel disabled={isLoading}>Batal</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => handleDelete(guru.id)} disabled={isLoading}>
+                            {isLoading ? 'Loading...' : 'Hapus'}
                           </AlertDialogAction>
                         </AlertDialogFooter>
                       </AlertDialogContent>

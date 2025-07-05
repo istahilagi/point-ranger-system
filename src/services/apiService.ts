@@ -1,5 +1,6 @@
+
 // API Service untuk integrasi dengan MySQL custom API
-const API_BASE_URL = 'https://man1halteng.alhastream.com';
+const API_BASE_URL = 'http://localhost:3002';
 
 export interface ApiResponse<T> {
   success: boolean;
@@ -15,6 +16,9 @@ class ApiService {
     options: RequestInit = {}
   ): Promise<ApiResponse<T>> {
     try {
+      console.log(`Making request to: ${API_BASE_URL}${endpoint}`);
+      console.log('Request options:', options);
+      
       const response = await fetch(`${API_BASE_URL}${endpoint}`, {
         headers: {
           'Content-Type': 'application/json',
@@ -24,8 +28,10 @@ class ApiService {
       });
 
       const data = await response.json();
+      console.log('Response data:', data);
       
       if (!response.ok) {
+        console.error('HTTP error:', response.status, data);
         throw new Error(data.error || `HTTP error! status: ${response.status}`);
       }
 
@@ -49,6 +55,7 @@ class ApiService {
   }
 
   async createUser(userData: any) {
+    console.log('Creating user with data:', userData);
     return this.request('/users', {
       method: 'POST',
       body: JSON.stringify(userData),
@@ -56,6 +63,7 @@ class ApiService {
   }
 
   async updateUser(id: string, userData: any) {
+    console.log('Updating user:', id, userData);
     return this.request(`/users/${id}`, {
       method: 'PUT',
       body: JSON.stringify(userData),
@@ -63,6 +71,7 @@ class ApiService {
   }
 
   async deleteUser(id: string) {
+    console.log('Deleting user:', id);
     return this.request(`/users/${id}`, {
       method: 'DELETE',
     });
