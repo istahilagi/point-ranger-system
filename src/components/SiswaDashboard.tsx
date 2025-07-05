@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Trophy, Star, Users, Award, LogOut, Building2 } from 'lucide-react';
+import { Trophy, Star, Users, Award, LogOut, Building2, TrendingDown } from 'lucide-react';
 import { User, Rombel, PointHistory } from '../pages/Index';
 
 interface SiswaDashboardProps {
@@ -53,6 +53,18 @@ const SiswaDashboard = ({ currentUser, users, rombels, pointHistories, onLogout 
     return <Users className="h-4 w-4 text-blue-500" />;
   };
 
+  const formatPoints = (points: number) => {
+    return points < 0 ? `${points}` : `${points}`;
+  };
+
+  const getPointsColor = (points: number) => {
+    return points < 0 ? 'text-red-600' : 'text-gray-900';
+  };
+
+  const getPointsIcon = (points: number) => {
+    return points < 0 ? <TrendingDown className="h-4 w-4 text-red-500" /> : <Star className="h-4 w-4 text-yellow-500" />;
+  };
+
   const renderRankingList = (siswaList: User[], currentRank: number, title: string) => (
     <div className="space-y-2">
       <h3 className="font-semibold text-gray-900 mb-3 text-sm">{title}</h3>
@@ -86,8 +98,10 @@ const SiswaDashboard = ({ currentUser, users, rombels, pointHistories, onLogout 
             </div>
             <div className="text-right">
               <div className="flex items-center gap-1">
-                <Star className="h-3 w-3 text-yellow-500" />
-                <span className="text-sm font-bold">{siswa.points || 0}</span>
+                {getPointsIcon(siswa.points || 0)}
+                <span className={`text-sm font-bold ${getPointsColor(siswa.points || 0)}`}>
+                  {formatPoints(siswa.points || 0)}
+                </span>
               </div>
               <Badge variant={rank <= 3 ? 'default' : 'secondary'} className="text-xs">
                 #{rank}
@@ -127,13 +141,13 @@ const SiswaDashboard = ({ currentUser, users, rombels, pointHistories, onLogout 
       <div className="px-4 py-4">
         {/* Mobile Stats Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
-          <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
+          <Card className={`${myPoints < 0 ? 'bg-gradient-to-r from-red-500 to-red-600' : 'bg-gradient-to-r from-blue-500 to-blue-600'} text-white`}>
             <CardContent className="p-3">
               <div className="flex items-center gap-2">
-                <Star className="h-4 w-4" />
+                {myPoints < 0 ? <TrendingDown className="h-4 w-4" /> : <Star className="h-4 w-4" />}
                 <div>
-                  <div className="text-lg font-bold">{myPoints}</div>
-                  <p className="text-xs text-blue-100">Total Poin</p>
+                  <div className="text-lg font-bold">{formatPoints(myPoints)}</div>
+                  <p className={`text-xs ${myPoints < 0 ? 'text-red-100' : 'text-blue-100'}`}>Total Poin</p>
                 </div>
               </div>
             </CardContent>
@@ -230,7 +244,11 @@ const SiswaDashboard = ({ currentUser, users, rombels, pointHistories, onLogout 
                     >
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
-                          <Star className={`h-3 w-3 ${isNegative ? 'text-red-500' : 'text-green-500'}`} />
+                          {isNegative ? (
+                            <TrendingDown className="h-3 w-3 text-red-500" />
+                          ) : (
+                            <Star className="h-3 w-3 text-green-500" />
+                          )}
                           <span className={`text-sm font-semibold ${isNegative ? 'text-red-700' : 'text-green-700'}`}>
                             {history.points > 0 ? '+' : ''}{history.points} poin
                           </span>
