@@ -1,11 +1,15 @@
-const express = require('express');
-const mysql = require('mysql2/promise');
-const cors = require('cors');
-const bcrypt = require('bcryptjs');
-const { v4: uuidv4 } = require('uuid');
-const path = require('path');
-const multer = require('multer');
-const fs = require('fs');
+import express from 'express';
+import mysql from 'mysql2/promise';
+import cors from 'cors';
+import bcrypt from 'bcryptjs';
+import { v4 as uuidv4 } from 'uuid';
+import path from 'path';
+import multer from 'multer';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 
