@@ -5,6 +5,7 @@ import GuruDashboard from '../components/GuruDashboard';
 import SiswaDashboard from '../components/SiswaDashboard';
 import RankingPage from '../components/RankingPage';
 import { useUsers, useKelas, useRombel, usePointHistory } from '../hooks/useApi';
+import { apiService } from '../services/apiService';
 
 export interface User {
   id: string;
@@ -177,6 +178,22 @@ const Index = () => {
       setPointHistories(pointHistoryData as PointHistory[]);
     }
   }, [pointHistoryData, pointHistoryLoading]);
+
+  // Test API connection on component mount
+  useEffect(() => {
+    const testAPI = async () => {
+      console.log('🔍 Testing API connection to: http://45.158.126.50:3002');
+      const result = await apiService.testConnection();
+      if (result.success) {
+        console.log('✅ API connection successful:', result);
+      } else {
+        console.error('❌ API connection failed:', result);
+        console.log('📝 Using fallback data instead');
+      }
+    };
+    
+    testAPI();
+  }, []);
 
   const handleLogin = (user: User) => {
     setCurrentUser(user);

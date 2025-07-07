@@ -10,6 +10,20 @@ export interface ApiResponse<T> {
 }
 
 class ApiService {
+  // Test API connection
+  async testConnection() {
+    try {
+      console.log('Testing API connection...');
+      const response = await fetch(`${API_BASE_URL}/health`);
+      const data = await response.json();
+      console.log('API Test Result:', data);
+      return data;
+    } catch (error) {
+      console.error('API Connection Test Failed:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
   private async request<T>(
     endpoint: string,
     options: RequestInit = {}
